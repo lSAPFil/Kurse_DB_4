@@ -15,13 +15,9 @@ namespace Project1_01._08._2022
 {
     public class Program
     {
-        //var builder = WebApplication.CreateBuilder(args);
-        //var app = builder.Build();
         public static void Main(string[] args)
         {
-
             CreateHostBuilder(args).Build().Run();
-            
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

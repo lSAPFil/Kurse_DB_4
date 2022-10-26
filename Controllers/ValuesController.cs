@@ -67,19 +67,8 @@ namespace Project1_01._08._2022.Controllers
 
             deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await JsonDataChenge(json));
 
-            //if (json == null)
-            //{
-            //    return NotFound();
-            //}
-            //else
-            //{
-            //    return Ok();
-            //}
-
-
             return deserialized;
         }
-
 
         private async Task<String> JsonDataChenge(string json)
         {
@@ -110,7 +99,6 @@ namespace Project1_01._08._2022.Controllers
              return await Task.FromResult(data);
         }
 
-
         private async void WriteDataBase(string IP, string Data, string Filters)
         {
             //Подключаемся к базе данных
@@ -124,33 +112,7 @@ namespace Project1_01._08._2022.Controllers
             sqlConnection.Close();
 
         }
-
         
     }
     
 }
-
-//[ProducesResponseType(StatusCodes.Status200OK)]
-//[ProducesResponseType(StatusCodes.Status404NotFound)]
-//Random rnd = new Random();
-//var deserialized = JsonConvert.DeserializeObject<ValueDate>(textData);
-//deserialized.global_id = rnd.Next(100000000, 999999999).ToString();
-//var datata = JsonConvert.DeserializeObject<List<ValueDate>>(result);
-//dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(textData);
-//// заменяем global_id на рандомне числа
-//foreach (var i in jsonObj)
-//{
-//    Console.WriteLine($"old global_id: {jsonObj?.global_id}");
-//    jsonObj["global_id"] = new string(Enumerable.Repeat("0123456789", 9).Select(s => s[rnd.Next(s.Length)]).ToArray());
-//    Console.WriteLine($"new global_id: {jsonObj?.global_id}");
-//}
-//string result = System.Text.Json.JsonSerializer.Serialize(textData);
-
-
-//DataTable dataTable = new DataTable();
-//sqlDataAdapter.Fill(dataTable);
-//foreach (DataRow row in dataTable.Rows)
-//{
-//    Console.WriteLine(row["Filters"]);
-//}
-//sqlCommand.ExecuteNonQuery();
