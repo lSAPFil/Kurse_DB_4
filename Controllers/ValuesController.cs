@@ -103,7 +103,8 @@ namespace Project1_01._08._2022.Controllers
         {
             //Подключаемся к базе данных
             SqlConnection sqlConnection =
-                new SqlConnection(@"data source=LAPTOP-B1HPKED9;initial catalog=Dudo;integrated security=True;MultipleActiveResultSets=True;TrustServerCertificate=True");
+                new SqlConnection(@"data source=LAPTOP-B1HPKED9;initial"+
+                " catalog=Dudo;integrated security=True;MultipleActiveResultSets=True;TrustServerCertificate=True");
            
             sqlConnection.Open();
             SqlCommand sqlCommand = new SqlCommand($"INSERT INTO Log values (N'{IP}', '{Data}','{Filters}')", sqlConnection);
