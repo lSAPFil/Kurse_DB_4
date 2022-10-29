@@ -19,7 +19,7 @@ using System.Reflection.Metadata;
 using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.WebUtilities;
-
+using System.Reflection;
 
 namespace Project1_01._08._2022.Controllers
 {
@@ -84,10 +84,12 @@ namespace Project1_01._08._2022.Controllers
             return output;
         }
 
+        private static string PathToLogFile = string.Empty;
         private async Task<String> TextData()
         {
+            PathToLogFile = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             // чтение файла
-            var data = await System.IO.File.ReadAllTextAsync(@"C:\Users\Natali\source\repos\Project1_01.08.2022\Moscow_Portal_Data.json");
+            var data = await System.IO.File.ReadAllTextAsync(PathToLogFile + "\\" + "Moscow_Portal_Data.json");
 
             // Если нет информации по чтению, выводим 404
             var a = Task.FromResult(data);
