@@ -47,15 +47,17 @@ namespace Project1_01._08._2022.Controllers
                 $" ID : {((ID == 0) ? "Null".ToString() : ID)};" +
                 $" OrgName : {(String.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
 
+            // Получаем данные IP пользователя
+            string Host = Dns.GetHostName();
+
+            // Передаем данные в базу
+            WriteDataBase(Dns.GetHostByName(Host).AddressList[0].ToString(), DateTime.Now.ToString(), Filters);
+
             // Вывод отфильтрованных значений
             var listDataSwagger = await Task.FromResult(deserialized.Where(i => ((!String.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
              && (!String.IsNullOrEmpty(District) ? i.District == District : true)
              && (ID != 0 ? i.ID == ID : true)
              && (!String.IsNullOrEmpty(OrgName) ? i.DeveloperInfo[0].OrgName == OrgName : true))).ToList());
-
-            string Host = Dns.GetHostName();
-
-            WriteDataBase(Dns.GetHostByName(Host).AddressList[0].ToString(), DateTime.Now.ToString(), Filters);
 
             var options = new JsonSerializerOptions
             {
@@ -107,11 +109,19 @@ namespace Project1_01._08._2022.Controllers
             SqlConnection sqlConnection =
                 new SqlConnection(@"data source=LAPTOP-B1HPKED9;initial"+
                 " catalog=Dudo;integrated security=True;MultipleActiveResultSets=True;TrustServerCertificate=True");
-           
+            // Integrated Security=true - Проверка подлинности Windows
+            // data source=LAPTOP-B1HPKED9 - Сервер откуда нужно брать данные
+            // catalog=Dudo - база в сервере 
+            // MultipleActiveResultSets=True - для выполнения запросов параллельно
+            //TrustServerCertificate=True - сертификат подлинности
+
+            // Открываем доступ к базе
             sqlConnection.Open();
             SqlCommand sqlCommand = new SqlCommand($"INSERT INTO Log values (N'{IP}', '{Data}','{Filters}')", sqlConnection);
 
+            // Выполяем введенную команду из sqlCommand
             sqlCommand.ExecuteNonQuery();
+            // Закрываем доступ к базе
             sqlConnection.Close();
 
         }
