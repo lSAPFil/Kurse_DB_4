@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.HttpOverrides;
+using System;
 
 namespace Project1_01._08._2022
 {
@@ -22,7 +23,11 @@ namespace Project1_01._08._2022
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo {
+                    Title = "My API", Version = "v1",
+                    Description ="asd",
+                    TermsOfService= new System.Uri("http://qweqwe.ru")
+                });
             });
             services.AddControllers();
         }

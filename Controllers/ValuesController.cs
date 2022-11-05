@@ -20,6 +20,8 @@ using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Reflection;
+using System.Diagnostics;
+using System.Net.Sockets;
 
 namespace Project1_01._08._2022.Controllers
 {
@@ -28,36 +30,45 @@ namespace Project1_01._08._2022.Controllers
     [Route("api/[controller]")]
     public class ValuesController : ControllerBase
     {
-        public Random rnd = new Random();
+        public static Random rnd = new Random();
         [HttpGet]
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IList<ValueDate>> Get(string AdmArea, string District, int ID, string OrgName)
+        public async Task<IList<ValueDate>> GetAsync(string AdmArea, string District, int? ID, string OrgName)
         {
+
+            //создаем объект
+            Stopwatch stopwatch = new Stopwatch();
+            //засекаем время начала операции
+            stopwatch.Start();
+
             // возвращаем информацию по файлу
-            var textData = await TextData();
-
-            // десериализуем полученный файл в лист
-            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(textData);
-
-            // Формируем данные для отправки в базу
-            string Filters = $"AdmArea : {(String.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
-                $" District : {(String.IsNullOrEmpty(District) ? "Null" : District)};" +
-                $" ID : {((ID == 0) ? "Null".ToString() : ID)};" +
-                $" OrgName : {(String.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
+            var textData = TextDataAsync();
 
             // Получаем данные IP пользователя
-            string Host = Dns.GetHostName();
-
-            // Передаем данные в базу
-            WriteDataBase(Dns.GetHostByName(Host).AddressList[0].ToString(), DateTime.Now.ToString(), Filters);
+            string Host = GetIP4Address();
+          
+            // десериализуем полученный файл в лист
+            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textData);
 
             // Вывод отфильтрованных значений
-            var listDataSwagger = await Task.FromResult(deserialized.Where(i => ((!String.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
-             && (!String.IsNullOrEmpty(District) ? i.District == District : true)
-             && (ID != 0 ? i.ID == ID : true)
-             && (!String.IsNullOrEmpty(OrgName) ? i.DeveloperInfo[0].OrgName == OrgName : true))).ToList());
+            var listDataSwagger = Task.FromResult(deserialized.Where(i => ((!string.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
+             && (!string.IsNullOrEmpty(District) ? i.District == District : true)
+             && (ID != null ? i.ID == ID : true) // int?
+             && (!string.IsNullOrEmpty(OrgName) ? i.DeveloperInfo[0].OrgName == OrgName : true))).ToList());
+
+
+            // Формируем данные для отправки в базу
+            string Filters = $"AdmArea : {(string.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
+                $" District : {(string.IsNullOrEmpty(District) ? "Null" : District)};" +
+                $" ID : {((ID == 0) ? "Null".ToString() : ID)};" +
+                $" OrgName : {(string.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
+
+            // Передаем данные в базу
+            WriteDataBaseAsync(Host, DateTime.Now.ToString(), Filters);
+
+            //TODO: IPv4 (клиентская IP. Тот кто вызвал)
 
             var options = new JsonSerializerOptions
             {
@@ -65,14 +76,17 @@ namespace Project1_01._08._2022.Controllers
                 WriteIndented = true
             };
 
-            string json = System.Text.Json.JsonSerializer.Serialize(listDataSwagger, options);
+            string json = System.Text.Json.JsonSerializer.Serialize(await listDataSwagger, options);
 
-            deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await JsonDataChenge(json));
+            deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(JsonDataChenge(json));
+
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
 
             return deserialized;
         }
 
-        private async Task<String> JsonDataChenge(string json)
+        private string JsonDataChenge(string json)
         {
             dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
 
@@ -87,7 +101,7 @@ namespace Project1_01._08._2022.Controllers
         }
 
         private static string PathToLogFile = string.Empty;
-        private async Task<String> TextData()
+        private async Task<String> TextDataAsync()
         {
             PathToLogFile = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             // чтение файла
@@ -95,6 +109,7 @@ namespace Project1_01._08._2022.Controllers
 
             // Если нет информации по чтению, выводим 404
             var a = Task.FromResult(data);
+
             if (a == null)
             {
                 NotFound();
@@ -103,7 +118,7 @@ namespace Project1_01._08._2022.Controllers
              return await Task.FromResult(data);
         }
 
-        private async void WriteDataBase(string IP, string Data, string Filters)
+        private async void WriteDataBaseAsync(string IP, string Data, string Filters)
         {
             //Подключаемся к базе данных
             SqlConnection sqlConnection =
@@ -113,19 +128,37 @@ namespace Project1_01._08._2022.Controllers
             // data source=LAPTOP-B1HPKED9 - Сервер откуда нужно брать данные
             // catalog=Dudo - база в сервере 
             // MultipleActiveResultSets=True - для выполнения запросов параллельно
-            //TrustServerCertificate=True - сертификат подлинности
+            // TrustServerCertificate=True - сертификат подлинности
 
             // Открываем доступ к базе
             sqlConnection.Open();
+
             SqlCommand sqlCommand = new SqlCommand($"INSERT INTO Log values (N'{IP}', '{Data}','{Filters}')", sqlConnection);
 
             // Выполяем введенную команду из sqlCommand
             sqlCommand.ExecuteNonQuery();
+   
             // Закрываем доступ к базе
             sqlConnection.Close();
 
         }
-        
+
+        public static string GetIP4Address()
+        {
+            string IP4Address = String.Empty;
+
+            foreach (IPAddress IPA in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (IPA.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    IP4Address = IPA.ToString();
+                    break;
+                }
+            }
+
+            return IP4Address;
+        }
+
     }
     
 }
