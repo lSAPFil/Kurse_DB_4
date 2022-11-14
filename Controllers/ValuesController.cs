@@ -37,7 +37,6 @@ namespace Project1_01._08._2022.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IList<ValueDate>> GetAsync(string AdmArea, string District, int? ID, string OrgName)
         {
-
             //создаем объект
             Stopwatch stopwatch = new Stopwatch();
             //засекаем время начала операции
@@ -47,8 +46,8 @@ namespace Project1_01._08._2022.Controllers
             var textData = TextDataAsync();
 
             // Получаем данные IP пользователя
-            string Host = GetIP4Address();
-          
+            string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+
             // десериализуем полученный файл в лист
             var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textData);
 
@@ -66,7 +65,7 @@ namespace Project1_01._08._2022.Controllers
                 $" OrgName : {(string.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
 
             // Передаем данные в базу
-            WriteDataBaseAsync(Host, DateTime.Now.ToString(), Filters);
+            WriteDataBaseAsync(clientip, DateTime.Now.ToString(), Filters);
 
             //TODO: IPv4 (клиентская IP. Тот кто вызвал)
 
@@ -142,23 +141,5 @@ namespace Project1_01._08._2022.Controllers
             sqlConnection.Close();
 
         }
-
-        public static string GetIP4Address()
-        {
-            string IP4Address = String.Empty;
-
-            foreach (IPAddress IPA in Dns.GetHostAddresses(Dns.GetHostName()))
-            {
-                if (IPA.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    IP4Address = IPA.ToString();
-                    break;
-                }
-            }
-
-            return IP4Address;
-        }
-
     }
-    
 }
