@@ -66,7 +66,7 @@ namespace Project1_01._08._2022.Controllers
             //}
 
             // 4 вар:
-            clientip = GetIP4Address();
+            string clientip = GetIP4Address();
 
 
             // Формируем данные для отправки в базу
