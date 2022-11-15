@@ -46,7 +46,28 @@ namespace Project1_01._08._2022.Controllers
             var textData = TextDataAsync();
 
             // Получаем данные IP пользователя
-            string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+
+            // 1 вар:  string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            // 2 вар:  string clientip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+            // 3 вар:
+            //string clientip ="";
+
+            //IPAddress remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
+            //if (remoteIpAddress != null)
+            //{
+            //    // If we got an IPV6 address, then we need to ask the network for the IPV4 address 
+            //    // This usually only happens when the browser is on the same machine as the server.
+            //    if (remoteIpAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            //    {
+            //        remoteIpAddress = System.Net.Dns.GetHostEntry(remoteIpAddress).AddressList
+            //.First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            //    }
+            //    clientip = remoteIpAddress.ToString();
+            //}
+
+            // 4 вар:
+            clientip = GetIP4Address();
+
 
             // Формируем данные для отправки в базу
             string Filters = $"AdmArea : {(string.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
@@ -134,6 +155,22 @@ namespace Project1_01._08._2022.Controllers
    
             // Закрываем доступ к базе
             sqlConnection.Close();
+        }
+
+        public static string GetIP4Address()
+        {
+            string IP4Address = String.Empty;
+
+            foreach (IPAddress IPA in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (IPA.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    IP4Address = IPA.ToString();
+                    break;
+                }
+            }
+
+            return IP4Address;
         }
     }
 }
