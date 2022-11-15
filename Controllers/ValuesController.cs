@@ -48,26 +48,23 @@ namespace Project1_01._08._2022.Controllers
             // Получаем данные IP пользователя
             string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
 
-            // десериализуем полученный файл в лист
-            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textData);
-
-            // Вывод отфильтрованных значений
-            var listDataSwagger = Task.FromResult(deserialized.Where(i => ((!string.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
-             && (!string.IsNullOrEmpty(District) ? i.District == District : true)
-             && (ID != null ? i.ID == ID : true) // int?
-             && (!string.IsNullOrEmpty(OrgName) ? i.DeveloperInfo[0].OrgName == OrgName : true))).ToList());
-
-
             // Формируем данные для отправки в базу
             string Filters = $"AdmArea : {(string.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
                 $" District : {(string.IsNullOrEmpty(District) ? "Null" : District)};" +
                 $" ID : {((ID == 0) ? "Null".ToString() : ID)};" +
                 $" OrgName : {(string.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
 
-            // Передаем данные в базу
-            WriteDataBaseAsync(clientip, DateTime.Now.ToString(), Filters);
+            // десериализуем полученный файл в лист
+            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textData);
 
-            //TODO: IPv4 (клиентская IP. Тот кто вызвал)
+            // Вывод отфильтрованных значений
+            var listDataSwagger = deserialized.Where(i => ((!string.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
+             && (!string.IsNullOrEmpty(District) ? i.District == District : true)
+             && (ID != null ? i.ID == ID : true)
+             && (!string.IsNullOrEmpty(OrgName) ? i.DeveloperInfo[0].OrgName == OrgName : true))).ToList();
+
+            // Передаем данные в базу
+            await WriteDataBaseAsync(clientip, DateTime.Now.ToString(), Filters);
 
             var options = new JsonSerializerOptions
             {
@@ -75,7 +72,7 @@ namespace Project1_01._08._2022.Controllers
                 WriteIndented = true
             };
 
-            string json = System.Text.Json.JsonSerializer.Serialize(await listDataSwagger, options);
+            string json = System.Text.Json.JsonSerializer.Serialize(listDataSwagger, options);
 
             deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(JsonDataChenge(json));
 
@@ -107,17 +104,15 @@ namespace Project1_01._08._2022.Controllers
             var data = await System.IO.File.ReadAllTextAsync(PathToLogFile + "\\" + "Moscow_Portal_Data.json");
 
             // Если нет информации по чтению, выводим 404
-            var a = Task.FromResult(data);
-
-            if (a == null)
+            if (data == null)
             {
                 NotFound();
             }
 
-             return await Task.FromResult(data);
+             return data;
         }
 
-        private async void WriteDataBaseAsync(string IP, string Data, string Filters)
+        private async Task WriteDataBaseAsync(string IP, string Data, string Filters)
         {
             //Подключаемся к базе данных
             SqlConnection sqlConnection =
@@ -139,7 +134,6 @@ namespace Project1_01._08._2022.Controllers
    
             // Закрываем доступ к базе
             sqlConnection.Close();
-
         }
     }
 }
