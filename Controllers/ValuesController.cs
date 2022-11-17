@@ -47,27 +47,13 @@ namespace Project1_01._08._2022.Controllers
 
             // Получаем данные IP пользователя
 
-            // 1 вар:  string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-            // 2 вар:  string clientip = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-            // 3 вар:
-            //string clientip ="";
+            // 1 вар:
+            string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            // 2 вар:
+            //string clientip = System.Web.HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"]
 
-            //IPAddress remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
-            //if (remoteIpAddress != null)
-            //{
-            //    // If we got an IPV6 address, then we need to ask the network for the IPV4 address 
-            //    // This usually only happens when the browser is on the same machine as the server.
-            //    if (remoteIpAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-            //    {
-            //        remoteIpAddress = System.Net.Dns.GetHostEntry(remoteIpAddress).AddressList
-            //.First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            //    }
-            //    clientip = remoteIpAddress.ToString();
-            //}
-
-            // 4 вар:
-            string clientip = GetIP4Address();
-
+            Console.WriteLine("Адрес компьютера " + GetIP4Address());
+            Console.WriteLine("Адрес клиента " + clientip);
 
             // Формируем данные для отправки в базу
             string Filters = $"AdmArea : {(string.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
@@ -157,6 +143,7 @@ namespace Project1_01._08._2022.Controllers
             sqlConnection.Close();
         }
 
+        // Получение адреса компьютера
         public static string GetIP4Address()
         {
             string IP4Address = String.Empty;
