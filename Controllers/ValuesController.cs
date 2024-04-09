@@ -43,7 +43,7 @@ namespace Project1_01._08._2022.Controllers
             stopwatch.Start();
 
             // возвращаем информацию по файлу
-            var textData = TextDataAsync();
+            var textDataTask = TextDataAsync();
 
             // Получаем данные IP пользователя
 
@@ -62,7 +62,7 @@ namespace Project1_01._08._2022.Controllers
                 $" OrgName : {(string.IsNullOrEmpty(OrgName) ? "Null" : OrgName)}";
 
             // десериализуем полученный файл в лист
-            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textData);
+            var deserialized = JsonConvert.DeserializeObject<IList<ValueDate>>(await textDataTask);
 
             // Вывод отфильтрованных значений
             var listDataSwagger = deserialized.Where(i => ((!string.IsNullOrEmpty(AdmArea) ? i.AdmArea == AdmArea : true)
@@ -121,15 +121,18 @@ namespace Project1_01._08._2022.Controllers
 
         private async Task WriteDataBaseAsync(string IP, string Data, string Filters)
         {
+            //Парсим фильтры для записи в БД
+            var filters = Filters
+                .Replace("AdmArea : ", "")
+                .Replace(" District :", "")
+                .Replace(" ID : ", "")
+                .Replace(" OrgName : ", "")
+                .Split(";");
+
             //Подключаемся к базе данных
             SqlConnection sqlConnection =
                 new SqlConnection(@"data source=LAPTOP-B1HPKED9;initial"+
                 " catalog=Dudo;integrated security=True;MultipleActiveResultSets=True;TrustServerCertificate=True");
-            // Integrated Security=true - Проверка подлинности Windows
-            // data source=LAPTOP-B1HPKED9 - Сервер откуда нужно брать данные
-            // catalog=Dudo - база в сервере 
-            // MultipleActiveResultSets=True - для выполнения запросов параллельно
-            // TrustServerCertificate=True - сертификат подлинности
 
             // Открываем доступ к базе
             sqlConnection.Open();
@@ -138,7 +141,13 @@ namespace Project1_01._08._2022.Controllers
 
             // Выполяем введенную команду из sqlCommand
             sqlCommand.ExecuteNonQuery();
-   
+
+
+            sqlCommand = new SqlCommand($"INSERT INTO Filters values (N'{filters[0]}', '{filters[3]}','{filters[1]}', '{filters[2]}', '{Data}')", sqlConnection);
+
+            // Выполяем введенную команду из sqlCommand
+            sqlCommand.ExecuteNonQuery();
+
             // Закрываем доступ к базе
             sqlConnection.Close();
         }
