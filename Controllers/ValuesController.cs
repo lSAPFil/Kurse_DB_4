@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -46,14 +46,9 @@ namespace Project1_01._08._2022.Controllers
             var textDataTask = TextDataAsync();
 
             // Получаем данные IP пользователя
-
-            // 1 вар:
-            string clientip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-            // 2 вар:
-            //string clientip = System.Web.HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"]
-
-            Console.WriteLine("Адрес компьютера " + GetIP4Address());
-            Console.WriteLine("Адрес клиента " + clientip);
+            string host = Dns.GetHostName();
+            Console.WriteLine($"Имя компьютера: {host}");
+            string clientip = Dns.GetHostAddresses(host).First<IPAddress>(f => f.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
             // Формируем данные для отправки в базу
             string Filters = $"AdmArea : {(string.IsNullOrEmpty(AdmArea) ? "Null" : AdmArea)};" +
